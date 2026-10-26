@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LEBRAM Streaming - Plataforma Móvil</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Bebas Neue', 'sans-serif'],
+                    },
+                    colors: {
+                        lebram: {
+                            bg: '#0b0d14',
+                            surface: '#161926',
+                            card: '#1f2437',
+                            red: '#e50914',
+                            blue: '#0063e5',
+                            accent: '#38bdf8',
+                            gold: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Ocultar barras de scroll pero mantener desplazamiento táctil suave */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Estilo de botones tipo Disney+ */
+        .disney-hub-btn {
+            background: linear-gradient(180deg, rgba(42, 48, 70, 0.85) 0%, rgba(21, 24, 38, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+            transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .disney-hub-btn:active, .disney-hub-btn.active-hub {
+            transform: scale(0.96);
+            border-color: rgba(56, 189, 248, 0.7);
+            box-shadow: 0 0 18px rgba(0, 99, 229, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Números gigantes huecos estilo Netflix Top 10 */
+        .top10-number {
+            font-family: 'Bebas Neue', 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 7.8rem;
+            line-height: 0.82;
+            color: #0b0d14;
+            -webkit-text-stroke: 3.5px #525866;
+            text-shadow: 4px 0 12px rgba(0, 0, 0, 0.85);
+            user-select: none;
+            pointer-events: none;
+            letter-spacing: -6px;
+        }
+
+        /* Insignia TOP 10 roja estilo Netflix */
+        .top10-badge {
+            background: linear-gradient(135deg, #e50914 0%, #b80610 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+        }
+
+        /* Marco de simulación móvil para cuando se abre en PC */
+        @media (min-width: 640px) {
+            body.framed-mode {
+                background: radial-gradient(circle at 50% 20%, #1e293b 0%, #06080e 100%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 1rem;
+            }
+            body.framed-mode #mobile-shell {
+                width: 412px;
+                height: 860px;
+                max-height: 90vh;
+                border-radius: 44px;
+                border: 10px solid #262936;
+                box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 2px #3f445a;
+                overflow: hidden;
+                position: relative;
+            }
+        }
+
+        /* Animación de pulso suave para contenido disponible */
+        @keyframes subtlePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.5); }
+            50% { box-shadow: 0 0 0 6px rgba(229, 9, 20, 0); }
+        }
+        .pulse-available {
+            animation: subtlePulse 2.2s infinite;
+        }
+    </style>
+</head>
+<body class="framed-mode bg-lebram-bg text-white font-sans antialiased selection:bg-lebram-red selection:text-white">
+
+    <!-- Barra superior de ayuda visible SOLO en pantallas de escritorio/notebook -->
+    <div id="desktop-toolbar" class="hidden sm:flex items-center justify-between gap-4 mb-3 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-700/70 text-xs text-slate-300 shadow-lg backdrop-blur-md">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="font-semibold text-white">Modo Presentación Móvil LEBRAM</span>
+            <span class="text-slate-400 hidden md:inline">• Optimizado para pantallas de celular</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDesktopFrame()" id="frame-toggle-btn" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-medium border border-slate-600 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-expand text-[10px]"></i>
+                <span>Ver Ancho Completo</span>
+            </button>
+            <button onclick="openTpConfigModal()" class="px-3 py-1 rounded-full bg-lebram-red hover:bg-red-700 text-white font-medium transition flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-[10px]"></i>
+                <span>Editar Película y 2 Cortos</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DEL DISPOSITIVO MÓVIL -->
+    <div id="mobile-shell" class="w-full min-h-screen sm:min-h-0 h-full bg-lebram-bg flex flex-col justify-between relative overflow-hidden">
+
+        <!-- Barra de estado estilo celular (Solo decorativa en modo marco) -->
+        <div class="hidden sm:flex items-center justify-between px-6 pt-2 pb-1 bg-lebram-bg/95 text-[11px] font-semibold text-slate-300 z-40 select-none">
+            <span id="status-clock">19:45</span>
+            <div class="w-24 h-4 bg-black rounded-full mx-auto border border-white/5"></div>
+            <div class="flex items-center gap-1.5 text-[10px]">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full text-emerald-400 text-xs"></i>
+            </div>
+        </div>
+
+        <!-- HEADER FLOTANTE DE LEBRAM -->
+        <!-- HEADER FLOTANTE DE PLOTT -->
+        <header class="sticky top-0 z-30 px-4 py-2.5 bg-gradient-to-b from-[#0b0d14] via-[#0b0d14]/90 to-transparent backdrop-blur-sm flex items-center justify-between">
+            <!-- Logo PLOTT -->
+            <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('inicio')">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-lebram-red via-red-600 to-amber-600 flex items-center justify-center shadow-md shadow-red-900/40 border border-white/20">
+                    <span class="font-display text-2xl tracking-tighter text-white leading-none pt-0.5">P</span>
+                </div>
+                <div>
+                    <span class="font-display text-2xl tracking-wider bg-gradient-to-r from-white via-slate-100 to-sky-300 bg-clip-text text-transparent leading-none block">PLOTT</span>
+                </div>
+            </div>
+
+            <!-- Píldoras rápidas + Botón Configurar TP -->
+            <div class="flex items-center gap-2">
+                <button onclick="filterPlayableOnly()" id="btn-only-playable" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-lebram-red/20 border border-lebram-red/60 text-red-200 flex items-center gap-1.5 active:scale-95 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-lebram-red animate-ping"></span>
+                    <span>3 Disponibles</span>
+                </button>
+                <button onclick="openTpConfigModal()" title="Personalizar Película y Cortos del TP" class="w-8 h-8 rounded-full bg-slate-800/90 hover:bg-slate-700 border border-white/15 flex items-center justify-center text-slate-200 active:scale-90 transition">
+                    <i class="fa-solid fa-pen-to-square text-xs text-sky-400"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ÁREA DE CONTENIDO DESPLAZABLE (SCROLL) -->
+        <main id="main-scroll" class="flex-1 overflow-y-auto no-scrollbar pb-24 space-y-5">
+
+            <!-- 1. HERO BANNER ESTILO DISNEY+ (PELÍCULA PRINCIPAL) -->
+            <section class="px-3.5 pt-1">
+                <div id="hero-banner-card" onclick="openMediaModal('main-movie')" class="relative w-full h-56 rounded-2xl overflow-hidden shadow-2xl border border-white/15 cursor-pointer group active:scale-[0.99] transition duration-200">
+                    <!-- Imagen de fondo del Hero -->
+                    <img id="hero-img" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1000&q=80" alt="Película Principal LEBRAM" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700">
+                    
+                    <!-- Gradientes cinemáticos -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#0b0d14] via-[#0b0d14]/45 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#0b0d14]/90 via-[#0b0d14]/30 to-transparent"></div>
+
+                    <!-- Información Principal del Banner -->
+                    <div class="absolute bottom-3 left-3.5 right-3.5 flex items-end justify-between gap-2">
+                        <div class="space-y-1 max-w-[72%]">
+                            <h1 id="hero-title" class="font-display text-3xl sm:text-4xl tracking-wide text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] leading-none">
+                                HORIZONTE CERO
+                            </h1>
+                            <div class="flex items-center gap-2 text-[11px] text-slate-300 font-medium">
+                                <span class="text-emerald-400 font-bold">99% Coincidencia</span>
+                                <span>•</span>
+                                <span id="hero-duration">1h 45m</span>
+                                <span class="px-1.5 py-0.2 bg-white/15 rounded text-[9px] font-bold text-white">4K HDR</span>
+                            </div>
+                            <p id="hero-desc" class="text-[11px] text-slate-300 line-clamp-1">
+                                La producción principal de LEBRAM. Tocá para reproducir ahora.
+                            </p>
+                        </div>
+
+                        <!-- Botón Play directo -->
+                        <button class="px-3.5 py-2 rounded-xl bg-white text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-xl active:scale-95 transition shrink-0">
+                            <i class="fa-solid fa-play text-lebram-red"></i>
+                            <span>Ver Ahora</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Indicadores de carrusel estilo Disney+ -->
+                <div class="flex justify-center items-center gap-1.5 mt-2">
+                    <span class="w-4 h-1 rounded-full bg-sky-400"></span>
+                    <span class="w-1.5 h-1 rounded-full bg-slate-600"></span>
+                    <span class="w-1.5 h-1 rounded-full bg-slate-600"></span>
+                    <span class="w-1.5 h-1 rounded-full bg-slate-600"></span>
+                </div>
+            </section>
+
+            <!-- 2. BOTÓN DE MARCA ESTILO DISNEY+ (ÚNICA OPCIÓN: LEBRAM) -->
+            <section class="px-3.5">
+                <div class="flex justify-center">
+                    <button onclick="filterByHub('all', this)" class="disney-hub-btn active-hub w-full h-14 rounded-xl flex items-center justify-center p-2">
+                        <span class="font-display text-2xl tracking-[0.2em] text-white leading-none drop-shadow">LEBRAM</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. SECCIÓN DESTACADA: NUESTRAS PRODUCCIONES REPRODUCIBLES (1 PELÍCULA + 2 CORTOS) -->
+            <section id="playable-section" class="space-y-2">
+                <div class="px-3.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold text-white tracking-tight">Producciones LEBRAM (Disponibles)</h2>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">Reproducibles</span>
+                    </div>
+                    <span class="text-[11px] text-sky-400 font-medium">1 Película + 2 Cortos</span>
+                </div>
+
+                <!-- Carrusel horizontal 16:9 de los 3 contenidos reales -->
+                <div id="playable-row" class="flex gap-3 overflow-x-auto no-scrollbar px-3.5 pb-1">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+            </section>
+
+            <!-- 4. FILA ESTILO NETFLIX: "Novedad en LEBRAM" (Portadas 16:9 con insignia TOP 10) -->
+            <section class="space-y-2">
+                <div class="px-3.5 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white tracking-tight">Novedad en LEBRAM</h2>
+                    <span class="text-[10px] text-slate-400">Deslizá <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                </div>
+
+                <div id="novedades-row" class="flex gap-2.5 overflow-x-auto no-scrollbar px-3.5 pb-1">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+            </section>
+
+            <!-- 5. FILA ESTILO NETFLIX (Segunda Imagen): "Las 10 más populares hoy" CON NÚMEROS GIGANTES -->
+            <section class="space-y-2 pt-1">
+                <div class="px-3.5 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white tracking-tight">Las 10 más populares en LEBRAM hoy</h2>
+                    <span class="text-[10px] font-semibold text-lebram-red uppercase tracking-wider">Top 10</span>
+                </div>
+
+                <div id="top10-row" class="flex gap-2 overflow-x-auto no-scrollbar px-3.5 py-2 items-center">
+                    <!-- Renderizado dinámico con números 1 al 10 + pósters verticales -->
+                </div>
+            </section>
+
+            <!-- 6. FILA ESTILO DISNEY+ / NETFLIX: "Estrenos de la próxima semana (Solo Portadas)" -->
+            <section class="space-y-2">
+                <div class="px-3.5 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white tracking-tight">Estrenos de la próxima semana</h2>
+                    <span class="text-[10px] text-slate-400">Solo Portadas</span>
+                </div>
+
+                <div id="proximos-row" class="flex gap-2.5 overflow-x-auto no-scrollbar px-3.5 pb-2">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+            </section>
+
+            <!-- 7. FILA ADICIONAL ESTILO DISNEY+: "Clásicos y Recomendados para vos" -->
+            <section class="space-y-2">
+                <div class="px-3.5 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white tracking-tight">Recomendados para vos</h2>
+                </div>
+
+                <div id="recomendados-row" class="flex gap-2.5 overflow-x-auto no-scrollbar px-3.5 pb-4">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+            </section>
+
+        </main>
+
+        <!-- BARRA DE NAVEGACIÓN INFERIOR MÓVIL -->
+        <nav class="absolute bottom-0 inset-x-0 z-30 bg-[#0b0d14]/95 backdrop-blur-md border-t border-white/10 px-4 py-2 flex items-center justify-around">
+            <button onclick="switchTab('inicio')" id="nav-inicio" class="flex flex-col items-center gap-0.5 text-white transition">
+                <i class="fa-solid fa-house text-base"></i>
+                <span class="text-[10px] font-semibold">Inicio</span>
+            </button>
+            <button onclick="switchTab('cortos')" id="nav-cortos" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition relative">
+                <span class="absolute -top-0.5 right-1 w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <i class="fa-solid fa-clapperboard text-base"></i>
+                <span class="text-[10px] font-medium">Película y Cortos</span>
+            </button>
+            <button onclick="switchTab('top10')" id="nav-top10" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-fire-flame-curved text-base"></i>
+                <span class="text-[10px] font-medium">Top 10</span>
+            </button>
+            <button onclick="openTpConfigModal()" id="nav-config" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-sliders text-base text-sky-400"></i>
+                <span class="text-[10px] font-medium text-sky-400">Cargar TP</span>
+            </button>
+        </nav>
+
+        <!-- ============================================================== -->
+        <!-- MODAL REPRODUCTOR DE VIDEO / DETALLE DE PORTADA (DENTRO DEL MÓVIL) -->
+        <!-- ============================================================== -->
+        <div id="media-modal" class="fixed sm:absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex-col justify-end transition-opacity">
+            <div class="bg-lebram-surface w-full max-h-[92%] rounded-t-3xl border-t border-white/15 overflow-y-auto no-scrollbar flex flex-col shadow-2xl animate-slide-up">
+                
+                <!-- Cabecera con reproductor o póster -->
+                <div class="relative w-full aspect-video bg-black overflow-hidden shrink-0">
+                    <!-- Botón Cerrar -->
+                    <button onclick="closeMediaModal()" class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/75 text-white border border-white/20 flex items-center justify-center active:scale-90 transition">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+
+                    <!-- Contenedor para Video Real / Canvas Animado (Solo para la Película Principal y los 2 Cortos) -->
+                    <div id="player-container" class="w-full h-full relative hidden">
+                        <!-- Canvas de animación cinematográfica integrada por defecto -->
+                        <canvas id="cinema-canvas" class="w-full h-full block"></canvas>
+
+                        <!-- Elemento <video> HTML5 real cuando el alumno sube un video de su celular o link MP4 -->
+                        <video id="custom-html5-video" class="w-full h-full object-contain bg-black hidden" controls playsinline></video>
+
+                        <!-- Iframe para YouTube si el alumno pega un link de YouTube -->
+                        <iframe id="custom-yt-iframe" class="w-full h-full hidden" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+
+                        <!-- Controles flotantes del reproductor simulado por defecto -->
+                        <div id="canvas-controls" class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between text-[11px] text-slate-200 font-medium">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="toggleCanvasPlay()" id="canvas-play-btn" class="w-7 h-7 rounded-full bg-lebram-red text-white flex items-center justify-center shadow">
+                                        <i class="fa-solid fa-pause text-xs"></i>
+                                    </button>
+                                    <span id="player-status-label" class="text-xs font-semibold text-white">Reproduciendo en LEBRAM Player</span>
+                                </div>
+                                <span id="canvas-timecode" class="font-mono text-[10px] text-slate-300">00:12 / 03:45</span>
+                            </div>
+                            <!-- Barra de progreso interactiva -->
+                            <div onclick="seekCanvasVideo(event)" class="w-full h-1.5 bg-white/25 rounded-full overflow-hidden cursor-pointer">
+                                <div id="canvas-progress" class="h-full bg-lebram-red w-1/3 transition-all duration-150"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista de Solo Portada (Para el resto del catálogo que no tiene película) -->
+                    <div id="cover-only-container" class="w-full h-full relative hidden">
+                        <img id="modal-cover-img" src="" alt="Portada" class="w-full h-full object-cover opacity-60">
+                        <div class="absolute inset-0 bg-gradient-to-t from-lebram-surface via-black/50 to-transparent flex flex-col items-center justify-center p-4 text-center">
+                            <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 mb-2">
+                                <i class="fa-solid fa-image text-lg"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                                Solo Portada de Catálogo
+                            </span>
+                            <p class="text-xs text-slate-200 mt-1 max-w-xs font-medium">
+                                Este título es parte de la interfaz visual de LEBRAM. Las producciones reproducibles del TP son la Película Principal y los 2 Cortos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuerpo de Información del Modal -->
+                <div class="p-4 space-y-3.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span id="modal-type-badge" class="text-[10px] font-extrabold tracking-widest uppercase text-sky-400">PELÍCULA PRINCIPAL</span>
+                            </div>
+                            <h3 id="modal-title" class="font-display text-2xl tracking-wide text-white leading-none">Título</h3>
+                        </div>
+
+                        <!-- Botón rápido para cargar archivo de video real desde el celular -->
+                        <label id="upload-video-label" class="cursor-pointer px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-sky-400/40 text-sky-300 text-[11px] font-semibold flex items-center gap-1.5 shrink-0 active:scale-95 transition">
+                            <i class="fa-solid fa-upload text-xs"></i>
+                            <span>Subir Video del Celu</span>
+                            <input type="file" id="direct-video-input" accept="video/*" class="hidden" onchange="handleDirectVideoUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- Metadatos -->
+                    <div class="flex items-center gap-2.5 text-xs text-slate-300 font-medium">
+                        <span class="text-emerald-400 font-bold">98% para vos</span>
+                        <span>2026</span>
+                        <span id="modal-duration" class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white font-semibold">1h 45m</span>
+                        <span id="modal-genre" class="text-slate-400">Ciencia Ficción</span>
+                    </div>
+
+                    <!-- Sinopsis -->
+                    <p id="modal-synopsis" class="text-xs text-slate-300 leading-relaxed">
+                        Sinopsis de la producción.
+                    </p>
+
+                    <!-- Botones de acción cuando es Solo Portada -->
+                    <div id="cover-only-actions" class="hidden pt-2 border-t border-white/10">
+                        <p class="text-[11px] text-slate-400 mb-2">¿Querés ir directo a los videos disponibles del Trabajo Práctico?</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="openMediaModal('main-movie')" class="p-2 rounded-xl bg-lebram-red/20 border border-lebram-red/50 text-white text-[11px] font-semibold flex flex-col items-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-film text-lebram-red"></i>
+                                <span>Película 1</span>
+                            </button>
+                            <button onclick="openMediaModal('short-1')" class="p-2 rounded-xl bg-sky-500/20 border border-sky-400/50 text-white text-[11px] font-semibold flex flex-col items-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-clapperboard text-sky-400"></i>
+                                <span>Corto 1</span>
+                            </button>
+                            <button onclick="openMediaModal('short-2')" class="p-2 rounded-xl bg-amber-500/20 border border-amber-400/50 text-white text-[11px] font-semibold flex flex-col items-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-clapperboard text-amber-400"></i>
+                                <span>Corto 2</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- MODAL DE PERSONALIZACIÓN DEL TRABAJO PRÁCTICO (CARGAR TÍTULOS/VIDEOS) -->
+        <!-- ============================================================== -->
+        <div id="tp-config-modal" class="fixed sm:absolute inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex-col justify-end">
+            <div class="bg-lebram-surface w-full h-[90%] rounded-t-3xl border-t border-white/20 flex flex-col overflow-hidden">
+                <!-- Header del Configurador -->
+                <div class="px-4 py-3 bg-slate-900/90 border-b border-white/10 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i>
+                        <h3 class="font-bold text-sm text-white">Configurar Película y 2 Cortos (TP)</h3>
+                    </div>
+                    <button onclick="closeTpConfigModal()" class="w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Contenido editable -->
+                <div class="p-4 overflow-y-auto no-scrollbar space-y-5 flex-1 text-xs">
+                    <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-400/30 text-sky-200 leading-relaxed">
+                        <i class="fa-solid fa-circle-info mr-1 text-sky-400"></i>
+                        Desde acá podés ponerle el <strong>nombre real, sinopsis, foto de portada y archivo de video</strong> de tu celular a la Película Principal y a los 2 Cortos para tu presentación.
+                    </div>
+
+                    <!-- Editor Película Principal -->
+                    <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-lebram-red/40 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-lebram-red uppercase tracking-wider text-[11px]">1. Película Principal</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-lebram-red/20 text-red-300">Banner + Top #1</span>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Título de la Película:</label>
+                            <input type="text" id="cfg-main-title" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white focus:outline-none focus:border-sky-400">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-slate-400 block mb-1">Duración:</label>
+                                <input type="text" id="cfg-main-duration" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">Foto Portada (Galería):</label>
+                                <input type="file" accept="image/*" onchange="handleCoverUpload('main-movie', event)" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-700 file:text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Sinopsis:</label>
+                            <textarea id="cfg-main-desc" rows="2" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Editor Corto 1 -->
+                    <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-sky-400/40 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-sky-400 uppercase tracking-wider text-[11px]">2. Cortometraje #1</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">Reproducible + Top #2</span>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Título del Corto 1:</label>
+                            <input type="text" id="cfg-short1-title" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-slate-400 block mb-1">Duración:</label>
+                                <input type="text" id="cfg-short1-duration" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">Foto Portada (Galería):</label>
+                                <input type="file" accept="image/*" onchange="handleCoverUpload('short-1', event)" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-700 file:text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Sinopsis:</label>
+                            <textarea id="cfg-short1-desc" rows="2" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Editor Corto 2 -->
+                    <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-amber-400/40 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-amber-400 uppercase tracking-wider text-[11px]">3. Cortometraje #2</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Reproducible + Top #3</span>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Título del Corto 2:</label>
+                            <input type="text" id="cfg-short2-title" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-slate-400 block mb-1">Duración:</label>
+                                <input type="text" id="cfg-short2-duration" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">Foto Portada (Galería):</label>
+                                <input type="file" accept="image/*" onchange="handleCoverUpload('short-2', event)" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-700 file:text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Sinopsis:</label>
+                            <textarea id="cfg-short2-desc" rows="2" class="w-full px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones Guardar / Restaurar -->
+                <div class="p-3.5 bg-slate-900 border-t border-white/10 flex items-center gap-2 shrink-0">
+                    <button onclick="resetDefaultCatalog()" class="px-3 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">
+                        Restaurar
+                    </button>
+                    <button onclick="saveTpConfig()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-lebram-red to-red-600 text-white font-bold text-xs shadow-lg active:scale-95 transition">
+                        Guardar Cambios para la Presentación
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notificación Toast Flotante -->
+        <div id="toast-msg" class="fixed sm:absolute top-14 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 font-bold text-xs px-4 py-2 rounded-full shadow-xl hidden items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="toast-text">Guardado con éxito</span>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================================
+        // CATÁLOGO DE DATOS DE LEBRAM:
+        // - 1 Película Principal (Reproducible)
+        // - 2 Cortometrajes (Reproducibles)
+        // - Portadas decorativas para rellenar las filas como en las capturas
+        // ============================================================================
+        const defaultPlayableItems = {
+            'main-movie': {
+                id: 'main-movie',
+                title: 'HORIZONTE CERO',
+                subtitle: 'Película Principal LEBRAM',
+                typeBadge: 'PELÍCULA ORIGINAL LEBRAM',
+                duration: '1h 48m',
+                genre: 'Ciencia Ficción • Acción',
+                hub: 'scifi',
+                isPlayable: true,
+                top10Rank: 1,
+                episodeBadge: 'ESTRENO EXCLUSIVO',
+                landscapeImg: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=900&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=500&q=80',
+                synopsis: 'En un futuro cercano donde la energía solar colapsa, un equipo de jóvenes especialistas descubre una señal oculta que podría salvar a la humanidad. Película principal producida por LEBRAM.',
+                customVideoUrl: null,
+                themeColor: '#e50914'
+            },
+            'short-1': {
+                id: 'short-1',
+                title: 'ECOS EN LA NIEBLA',
+                subtitle: 'Cortometraje Oficial #1',
+                typeBadge: 'CORTO ORIGINAL LEBRAM #1',
+                duration: '12 min',
+                genre: 'Suspenso • Corto',
+                hub: 'cortos',
+                isPlayable: true,
+                top10Rank: 2,
+                episodeBadge: 'CORTO DISPONIBLE',
+                landscapeImg: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=500&q=80',
+                synopsis: 'Primer cortometraje original de LEBRAM. Una historia intensa contada en pocos minutos donde cada decisión altera el destino del protagonista.',
+                customVideoUrl: null,
+                themeColor: '#38bdf8'
+            },
+            'short-2': {
+                id: 'short-2',
+                title: 'ÚLTIMO TREN A CASA',
+                subtitle: 'Cortometraje Oficial #2',
+                typeBadge: 'CORTO ORIGINAL LEBRAM #2',
+                duration: '15 min',
+                genre: 'Drama • Corto',
+                hub: 'cortos',
+                isPlayable: true,
+                top10Rank: 3,
+                episodeBadge: 'CORTO DISPONIBLE',
+                landscapeImg: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=500&q=80',
+                synopsis: 'Segundo cortometraje exclusivo de LEBRAM. Dos desconocidos coinciden en la última estación de la medianoche y descubren que comparten el mismo pasado.',
+                customVideoUrl: null,
+                themeColor: '#f59e0b'
+            }
+        };
+
+        // Portadas decorativas ("Solo portadas" para completar el diseño visual de la app)
+        const decorativeCovers = [
+            {
+                id: 'cov-1',
+                title: 'IMPERDONABLE',
+                duration: '1h 52m',
+                genre: 'Drama',
+                hub: 'drama',
+                top10Badge: true,
+                top10Rank: 4,
+                episodeBadge: 'NUEVOS EPISODIOS',
+                landscapeImg: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-2',
+                title: 'CÓDIGO ROJO',
+                duration: '2h 05m',
+                genre: 'Acción',
+                hub: 'accion',
+                top10Badge: true,
+                top10Rank: 5,
+                episodeBadge: 'NUEVA TEMPORADA',
+                landscapeImg: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-3',
+                title: 'GALAXIA OCULTA',
+                duration: '2h 14m',
+                genre: 'Ciencia Ficción',
+                hub: 'scifi',
+                top10Badge: false,
+                top10Rank: 6,
+                episodeBadge: 'PRÓXIMAMENTE',
+                landscapeImg: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-4',
+                title: 'RICOS Y MIMADOS',
+                duration: '1h 38m',
+                genre: 'Comedia',
+                hub: 'drama',
+                top10Badge: true,
+                top10Rank: 7,
+                episodeBadge: 'NUEVOS EPISODIOS',
+                landscapeImg: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-5',
+                title: 'TITANES DEL SUR',
+                duration: '1h 59m',
+                genre: 'Acción',
+                hub: 'accion',
+                top10Badge: false,
+                top10Rank: 8,
+                episodeBadge: 'NUEVOS EPISODIOS',
+                landscapeImg: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-6',
+                title: 'SOLTERO HASTA NAVIDAD',
+                duration: '1h 40m',
+                genre: 'Romance',
+                hub: 'drama',
+                top10Badge: true,
+                top10Rank: 9,
+                episodeBadge: 'SOLO PORTADA',
+                landscapeImg: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            },
+            {
+                id: 'cov-7',
+                title: 'CENTINELAS',
+                duration: '2h 10m',
+                genre: 'Ciencia Ficción',
+                hub: 'scifi',
+                top10Badge: false,
+                top10Rank: 10,
+                episodeBadge: 'SOLO PORTADA',
+                landscapeImg: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80',
+                portraitImg: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=400&q=80',
+                synopsis: 'Portada de demostración del catálogo visual de LEBRAM.'
+            }
+        ];
+
+        // Estado actual cargado
+        let playableCatalog = JSON.parse(localStorage.getItem('lebram_tp_catalog')) || structuredClone(defaultPlayableItems);
+        let activeMediaId = 'main-movie';
+
+        // Variables para el reproductor Canvas integrado
+        let canvasAnimId = null;
+        let isCanvasPlaying = true;
+        let canvasProgress = 0;
+
+        // ============================================================================
+        // RENDERIZADO DE LA INTERFAZ
+        // ============================================================================
+        function renderAllSections(hubFilter = 'all') {
+            const mainMovie = playableCatalog['main-movie'];
+            const short1 = playableCatalog['short-1'];
+            const short2 = playableCatalog['short-2'];
+
+            // 1. Actualizar Hero Banner con la Película Principal
+            document.getElementById('hero-img').src = mainMovie.landscapeImg;
+            document.getElementById('hero-title').textContent = mainMovie.title;
+            document.getElementById('hero-duration').textContent = mainMovie.duration;
+            document.getElementById('hero-desc').textContent = mainMovie.synopsis;
+
+            // 2. Renderizar Fila de "Producciones LEBRAM (Disponibles)" (1 Película + 2 Cortos)
+            const playableRow = document.getElementById('playable-row');
+            const playableArray = [mainMovie, short1, short2].filter(item => {
+                if (hubFilter === 'all') return true;
+                if (hubFilter === 'cortos') return item.id !== 'main-movie';
+                return true;
+            });
+
+            playableRow.innerHTML = playableArray.map(item => `
+                <div onclick="openMediaModal('${item.id}')" class="relative w-52 shrink-0 aspect-video rounded-xl overflow-hidden bg-lebram-card border-2 border-emerald-500/70 shadow-lg cursor-pointer group active:scale-95 transition">
+                    <img src="${item.landscapeImg}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent"></div>
+
+                    <!-- Título abajo -->
+                    <div class="absolute bottom-2 left-2.5 right-2.5 flex items-end justify-between">
+                        <div>
+                            <p class="font-display text-lg text-white leading-none tracking-wide">${item.title}</p>
+                            <span class="text-[9px] text-emerald-300 font-semibold">${item.duration} • Disponible</span>
+                        </div>
+                        <div class="w-6 h-6 rounded-full bg-white text-slate-950 flex items-center justify-center shadow">
+                            <i class="fa-solid fa-play text-[9px] ml-0.5"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // 3. Renderizar "Novedad en LEBRAM" (Portadas 16:9 limpias sin logos arriba)
+            const novedadesRow = document.getElementById('novedades-row');
+            const novedadesList = [short1, short2, ...decorativeCovers.slice(0, 4)].filter(item => {
+                if (hubFilter === 'all') return true;
+                return item.hub === hubFilter;
+            });
+
+            novedadesRow.innerHTML = novedadesList.map(item => {
+                const isPlayable = !!item.isPlayable;
+                return `
+                <div onclick="openMediaModal('${item.id}')" class="relative w-40 shrink-0 aspect-video rounded-lg overflow-hidden bg-lebram-card border border-white/10 cursor-pointer group active:scale-95 transition">
+                    <img src="${item.landscapeImg}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+
+                    <div class="absolute bottom-1.5 left-2 right-2">
+                        <p class="font-display text-sm tracking-wide text-white leading-none truncate">${item.title}</p>
+                        <p class="text-[8px] ${isPlayable ? 'text-emerald-400 font-bold' : 'text-slate-400'}">
+                            ${isPlayable ? '● Video Disponible' : 'Solo portada'}
+                        </p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // 4. Renderizar "Las 10 más populares hoy" (Números gigantes 1, 2, 3, 4... + pósters verticales limpios)
+            const top10Row = document.getElementById('top10-row');
+            const top10All = [mainMovie, short1, short2, ...decorativeCovers];
+
+            top10Row.innerHTML = top10All.map((item, idx) => {
+                const rank = idx + 1;
+                const isPlayable = !!item.isPlayable;
+                return `
+                <div onclick="openMediaModal('${item.id}')" class="relative flex items-end shrink-0 pl-8 pr-1 cursor-pointer group active:scale-95 transition">
+                    <!-- Número gigante contorneado detrás a la izquierda -->
+                    <span class="top10-number absolute -left-0.5 bottom-0 z-0 select-none">${rank}</span>
+                    
+                    <!-- Póster Vertical sin logos arriba -->
+                    <div class="relative z-10 w-24 h-36 rounded-lg overflow-hidden bg-lebram-card border ${isPlayable ? 'border-emerald-400/70' : 'border-white/15'} shadow-xl">
+                        <img src="${item.portraitImg}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent"></div>
+
+                        <!-- Título y cinta roja inferior estilo "NUEVOS EPISODIOS" de la imagen 2 -->
+                        <div class="absolute bottom-1.5 inset-x-1 text-center">
+                            <p class="font-display text-xs text-white leading-tight truncate px-0.5">${item.title}</p>
+                            <div class="mt-0.5 ${isPlayable ? 'bg-lebram-red text-white' : 'bg-red-700/90 text-white'} text-[7px] font-extrabold uppercase py-0.5 px-1 rounded-sm tracking-tighter truncate">
+                                ${item.episodeBadge}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // 5. Renderizar "Estrenos de la próxima semana" (Solo portadas 16:9 sin logos arriba)
+            const proximosRow = document.getElementById('proximos-row');
+            proximosRow.innerHTML = decorativeCovers.slice().reverse().map(item => `
+                <div onclick="openMediaModal('${item.id}')" class="relative w-36 shrink-0 aspect-video rounded-lg overflow-hidden bg-lebram-card border border-white/10 cursor-pointer group active:scale-95 transition">
+                    <img src="${item.landscapeImg}" alt="${item.title}" class="w-full h-full object-cover opacity-85 group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-1.5 left-2 right-2">
+                        <p class="font-display text-xs tracking-wide text-white leading-none truncate">${item.title}</p>
+                        <span class="text-[8px] text-amber-300/90">Próxima semana • Portada</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // 6. Renderizar "Recomendados para vos" (Estilo Disney+ 16:9)
+            const recomendadosRow = document.getElementById('recomendados-row');
+            const mixList = [mainMovie, ...decorativeCovers.slice(1, 5), short1];
+            recomendadosRow.innerHTML = mixList.map(item => `
+                <div onclick="openMediaModal('${item.id}')" class="relative w-36 shrink-0 aspect-video rounded-lg overflow-hidden bg-lebram-card border border-white/10 cursor-pointer group active:scale-95 transition">
+                    <img src="${item.landscapeImg}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-1.5 left-2 right-2 flex items-center justify-between">
+                        <p class="font-display text-xs tracking-wide text-white leading-none truncate">${item.title}</p>
+                        ${item.isPlayable ? '<i class="fa-solid fa-circle-play text-emerald-400 text-[10px]"></i>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================================
+        // MODAL DE REPRODUCCIÓN (PELÍCULA + 2 CORTOS) Y VISTA DE SOLO PORTADA
+        // ============================================================================
+        function openMediaModal(mediaId) {
+            activeMediaId = mediaId;
+            const item = playableCatalog[mediaId] || decorativeCovers.find(c => c.id === mediaId);
+            if (!item) return;
+
+            const modal = document.getElementById('media-modal');
+            const playerContainer = document.getElementById('player-container');
+            const coverOnlyContainer = document.getElementById('cover-only-container');
+            const coverOnlyActions = document.getElementById('cover-only-actions');
+            const uploadVideoLabel = document.getElementById('upload-video-label');
+
+            document.getElementById('modal-title').textContent = item.title;
+            document.getElementById('modal-duration').textContent = item.duration;
+            document.getElementById('modal-genre').textContent = item.genre;
+            document.getElementById('modal-synopsis').textContent = item.synopsis;
+
+            if (item.isPlayable) {
+                // Es la Película Principal o uno de los 2 Cortos -> Mostrar Reproductor
+                document.getElementById('modal-type-badge').textContent = item.typeBadge;
+                document.getElementById('modal-type-badge').className = 'text-[10px] font-extrabold tracking-widest uppercase text-emerald-400';
+                playerContainer.classList.remove('hidden');
+                coverOnlyContainer.classList.add('hidden');
+                coverOnlyActions.classList.add('hidden');
+                uploadVideoLabel.classList.remove('hidden');
+
+                startVideoPlayback(item);
+            } else {
+                // Es una portada decorativa -> Mostrar aviso elegante de Solo Portada
+                stopVideoPlayback();
+                document.getElementById('modal-type-badge').textContent = 'SOLO PORTADA DE DEMOSTRACIÓN';
+                document.getElementById('modal-type-badge').className = 'text-[10px] font-extrabold tracking-widest uppercase text-amber-400';
+                playerContainer.classList.add('hidden');
+                coverOnlyContainer.classList.remove('hidden');
+                coverOnlyActions.classList.remove('hidden');
+                uploadVideoLabel.classList.add('hidden');
+                document.getElementById('modal-cover-img').src = item.landscapeImg;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeMediaModal() {
+            stopVideoPlayback();
+            const modal = document.getElementById('media-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // ============================================================================
+        // REPRODUCTOR CINEMATOGRÁFICO INTEGRADO + SOPORTE DE VIDEO LOCAL DEL CELULAR
+        // ============================================================================
+        function startVideoPlayback(item) {
+            const html5Video = document.getElementById('custom-html5-video');
+            const canvas = document.getElementById('cinema-canvas');
+            const canvasControls = document.getElementById('canvas-controls');
+
+            // Si el alumno subió un archivo de video real desde su celular para este título
+            if (item.customVideoUrl) {
+                if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
+                canvas.classList.add('hidden');
+                canvasControls.classList.add('hidden');
+                html5Video.classList.remove('hidden');
+                html5Video.src = item.customVideoUrl;
+                html5Video.play().catch(() => {});
+                return;
+            }
+
+            // Si no subió archivo aún, reproducimos una animación cinematográfica de LEBRAM Studios en Canvas
+            html5Video.pause();
+            html5Video.classList.add('hidden');
+            canvas.classList.remove('hidden');
+            canvasControls.classList.remove('hidden');
+
+            isCanvasPlaying = true;
+            canvasProgress = 0;
+            updatePlayPauseIcon();
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = 640;
+            canvas.height = 360;
+
+            let stars = Array.from({ length: 55 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 2 + 0.5,
+                speed: Math.random() * 1.4 + 0.3
+            }));
+
+            function renderFrame() {
+                if (!isCanvasPlaying) return;
+                canvasProgress = (canvasProgress + 0.15) % 100;
+                document.getElementById('canvas-progress').style.width = `${canvasProgress}%`;
+
+                const totalSec = Math.floor((canvasProgress / 100) * 180);
+                const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+                const secs = String(totalSec % 60).padStart(2, '0');
+                document.getElementById('canvas-timecode').textContent = `${mins}:${secs} / ${item.id === 'main-movie' ? '1:48:00' : '12:00'}`;
+
+                // Fondo cinemático dinámico según el corto o película
+                const grad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 20, canvas.width / 2, canvas.height / 2, 360);
+                grad.addColorStop(0, item.themeColor || '#e50914');
+                grad.addColorStop(0.55, '#111625');
+                grad.addColorStop(1, '#05070c');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Partículas en movimiento
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                stars.forEach(s => {
+                    s.x -= s.speed;
+                    if (s.x < 0) s.x = canvas.width;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Barras widescreen de cine arriba y abajo
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, 32);
+                ctx.fillRect(0, canvas.height - 32, canvas.width, 32);
+
+                // Textos centrales de la producción
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.fillText('LEBRAM STUDIOS PRESENTA', canvas.width / 2, 130);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 40px "Bebas Neue", sans-serif';
+                ctx.fillText(item.title, canvas.width / 2, 180);
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = '600 13px Inter, sans-serif';
+                ctx.fillText(`▶ Reproduciendo: ${item.subtitle} (Podés subir tu video real arriba)`, canvas.width / 2, 215);
+
+                canvasAnimId = requestAnimationFrame(renderFrame);
+            }
+
+            if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
+            renderFrame();
+        }
+
+        function stopVideoPlayback() {
+            if (canvasAnimId) cancelAnimationFrame(canvasAnimId);
+            const html5Video = document.getElementById('custom-html5-video');
+            if (html5Video) html5Video.pause();
+        }
+
+        function toggleCanvasPlay() {
+            isCanvasPlaying = !isCanvasPlaying;
+            updatePlayPauseIcon();
+            if (isCanvasPlaying) {
+                const item = playableCatalog[activeMediaId];
+                if (item) startVideoPlayback(item);
+            }
+        }
+
+        function updatePlayPauseIcon() {
+            const btn = document.getElementById('canvas-play-btn');
+            btn.innerHTML = isCanvasPlaying
+                ? '<i class="fa-solid fa-pause text-xs"></i>'
+                : '<i class="fa-solid fa-play text-xs ml-0.5"></i>';
+        }
+
+        function seekCanvasVideo(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            canvasProgress = Math.max(0, Math.min(100, (clickX / rect.width) * 100));
+            document.getElementById('canvas-progress').style.width = `${canvasProgress}%`;
+        }
+
+        // Subir video directo desde el celular dentro del reproductor
+        function handleDirectVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !playableCatalog[activeMediaId]) return;
+
+            const videoUrl = URL.createObjectURL(file);
+            playableCatalog[activeMediaId].customVideoUrl = videoUrl;
+            startVideoPlayback(playableCatalog[activeMediaId]);
+            showToast('¡Video cargado desde tu dispositivo!');
+        }
+
+        // ============================================================================
+        // CONFIGURADOR DEL TRABAJO PRÁCTICO (EDITAR TÍTULOS, PORTADAS Y SINOPSIS)
+        // ============================================================================
+        function openTpConfigModal() {
+            document.getElementById('cfg-main-title').value = playableCatalog['main-movie'].title;
+            document.getElementById('cfg-main-duration').value = playableCatalog['main-movie'].duration;
+            document.getElementById('cfg-main-desc').value = playableCatalog['main-movie'].synopsis;
+
+            document.getElementById('cfg-short1-title').value = playableCatalog['short-1'].title;
+            document.getElementById('cfg-short1-duration').value = playableCatalog['short-1'].duration;
+            document.getElementById('cfg-short1-desc').value = playableCatalog['short-1'].synopsis;
+
+            document.getElementById('cfg-short2-title').value = playableCatalog['short-2'].title;
+            document.getElementById('cfg-short2-duration').value = playableCatalog['short-2'].duration;
+            document.getElementById('cfg-short2-desc').value = playableCatalog['short-2'].synopsis;
+
+            const modal = document.getElementById('tp-config-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTpConfigModal() {
+            const modal = document.getElementById('tp-config-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handleCoverUpload(itemId, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                playableCatalog[itemId].landscapeImg = e.target.result;
+                playableCatalog[itemId].portraitImg = e.target.result;
+                showToast('Portada actualizada');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveTpConfig() {
+            playableCatalog['main-movie'].title = document.getElementById('cfg-main-title').value.trim() || 'PELÍCULA LEBRAM';
+            playableCatalog['main-movie'].duration = document.getElementById('cfg-main-duration').value.trim() || '1h 45m';
+            playableCatalog['main-movie'].synopsis = document.getElementById('cfg-main-desc').value.trim();
+
+            playableCatalog['short-1'].title = document.getElementById('cfg-short1-title').value.trim() || 'CORTO #1';
+            playableCatalog['short-1'].duration = document.getElementById('cfg-short1-duration').value.trim() || '12 min';
+            playableCatalog['short-1'].synopsis = document.getElementById('cfg-short1-desc').value.trim();
+
+            playableCatalog['short-2'].title = document.getElementById('cfg-short2-title').value.trim() || 'CORTO #2';
+            playableCatalog['short-2'].duration = document.getElementById('cfg-short2-duration').value.trim() || '15 min';
+            playableCatalog['short-2'].synopsis = document.getElementById('cfg-short2-desc').value.trim();
+
+            try {
+                localStorage.setItem('lebram_tp_catalog', JSON.stringify(playableCatalog));
+            } catch (e) {}
+
+            renderAllSections();
+            closeTpConfigModal();
+            showToast('¡Datos del TP actualizados!');
+        }
+
+        function resetDefaultCatalog() {
+            localStorage.removeItem('lebram_tp_catalog');
+            playableCatalog = structuredClone(defaultPlayableItems);
+            renderAllSections();
+            closeTpConfigModal();
+            showToast('Catálogo original restaurado');
+        }
+
+        // ============================================================================
+        // NAVEGACIÓN Y FILTROS MÓVILES
+        // ============================================================================
+        function filterByHub(hub, btnEl) {
+            document.querySelectorAll('.disney-hub-btn').forEach(b => b.classList.remove('active-hub'));
+            if (btnEl) btnEl.classList.add('active-hub');
+            renderAllSections(hub);
+        }
+
+        function filterPlayableOnly() {
+            const playableSec = document.getElementById('playable-section');
+            playableSec.scrollIntoView({ behavior: 'smooth' });
+            playableSec.classList.add('ring-2', 'ring-emerald-400', 'rounded-xl', 'p-1');
+            setTimeout(() => playableSec.classList.remove('ring-2', 'ring-emerald-400', 'rounded-xl', 'p-1'), 1800);
+        }
+
+        function switchTab(tab) {
+            const mainScroll = document.getElementById('main-scroll');
+            if (tab === 'inicio') {
+                mainScroll.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (tab === 'cortos') {
+                filterPlayableOnly();
+            } else if (tab === 'top10') {
+                document.getElementById('top10-row').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function toggleDesktopFrame() {
+            const body = document.body;
+            const btn = document.getElementById('frame-toggle-btn');
+            body.classList.toggle('framed-mode');
+            if (body.classList.contains('framed-mode')) {
+                btn.innerHTML = '<i class="fa-solid fa-expand text-[10px]"></i><span>Ver Ancho Completo</span>';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-mobile-screen text-[10px]"></i><span>Volver a Marco Celular</span>';
+            }
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').textContent = text;
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('flex');
+            }, 2600);
+        }
+
+        // Inicializar al cargar
+        window.onload = function () {
+            renderAllSections();
+        };
+    </script>
+</body>
+</html>
